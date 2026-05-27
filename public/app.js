@@ -1,5 +1,18 @@
 const $ = (id) => document.getElementById(id);
 
+if (typeof window.TextEncoder === "undefined") {
+  window.TextEncoder = class {
+    encode(input = "") {
+      const encoded = unescape(encodeURIComponent(String(input)));
+      const bytes = new Uint8Array(encoded.length);
+      for (let i = 0; i < encoded.length; i += 1) {
+        bytes[i] = encoded.charCodeAt(i);
+      }
+      return bytes;
+    }
+  };
+}
+
 const state = {
   file: null,
   transfer: null,
@@ -88,9 +101,7 @@ function base64UrlFromBytes(bytes) {
 
 function bytesFromBase64Url(value) {
   let padded = value.split("-").join("+").split("_").join("/");
-  while (padded.length % 4) {
-    padded += "=";
-  }
+  while (padded.length % 4) padded += "=";
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) {
@@ -113,7 +124,7 @@ function switchMode(mode) {
 
 async function prepareTransfer(file) {
   const maxChunk = MAX_CHUNK_FOR_EC[state.errorLevel] || 1500;
-  const chunkSize = Math.max(400, Math.min(maxChunk, Number(senderEls.chunkSize.value) || 1400));
+  const chunkSize = Math.max(300, Math.min(maxChunk, Number(senderEls.chunkSize.value) || 1400));
   senderEls.chunkSize.value = chunkSize;
   const bytes = new Uint8Array(await file.arrayBuffer());
   return {
@@ -158,18 +169,18 @@ function parseFrameFilter(input, total) {
   if (!input || !total) return null;
   const out = [];
   const seen = new Set();
-  const tokens = input.split(/[\s,，、]+/).filter(Boolean);
+  const tokens = input.split(/[\s,，、;；]+/).filter(Boolean);
   for (const token of tokens) {
-    const m = token.match(/^(\d+)\s*(?:[-–~]\s*(\d+))?$/);
-    if (!m) continue;
-    let a = Number(m[1]);
-    let b = m[2] ? Number(m[2]) : a;
+    const match = token.match(/^(\d+)\s*(?:[-–—~～]\s*(\d+))?$/);
+    if (!match) continue;
+    let a = Number(match[1]);
+    let b = match[2] ? Number(match[2]) : a;
     if (a > b) [a, b] = [b, a];
     for (let i = a; i <= b; i += 1) {
-      const idx = i - 1;
-      if (idx >= 0 && idx < total && !seen.has(idx)) {
-        seen.add(idx);
-        out.push(idx);
+      const index = i - 1;
+      if (index >= 0 && index < total && !seen.has(index)) {
+        seen.add(index);
+        out.push(index);
       }
     }
   }
@@ -229,6 +240,7 @@ function drawModulesToCanvas(entry) {
         buf[pi] = 0;
         buf[pi + 1] = 0;
         buf[pi + 2] = 0;
+        buf[pi + 3] = 255;
       }
     }
   }
@@ -248,13 +260,8 @@ async function renderFrame(pos) {
 }
 
 async function getQrModules(index) {
-  if (state.qrCache.has(index)) {
-    return state.qrCache.get(index);
-  }
-
-  if (state.qrInFlight.has(index)) {
-    return state.qrInFlight.get(index);
-  }
+  if (state.qrCache.has(index)) return state.qrCache.get(index);
+  if (state.qrInFlight.has(index)) return state.qrInFlight.get(index);
 
   const promise = requestQrModules(index).finally(() => {
     state.qrInFlight.delete(index);
@@ -264,19 +271,26 @@ async function getQrModules(index) {
 }
 
 async function requestQrModules(index) {
-  const payload = getFramePayload(index);
-  const response = await fetch("/api/qr", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ payload, errorCorrectionLevel: state.errorLevel }),
-  });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || "二维码生成失败");
+  if (!window.QRCode || typeof QRCode.create !== "function") {
+    throw new Error("二维码库未加载，请刷新页面。");
+  }
 
-  const binary = atob(result.modules);
-  const bits = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bits[i] = binary.charCodeAt(i);
-  const entry = { size: result.size, bits };
+  const payload = getFramePayload(index);
+  let qr;
+  try {
+    qr = QRCode.create(payload, { errorCorrectionLevel: state.errorLevel });
+  } catch (error) {
+    throw new Error(`分片太大，${state.errorLevel} 级纠错装不下：${error.message}`);
+  }
+
+  const size = qr.modules.size;
+  const data = qr.modules.data;
+  const bits = new Uint8Array((data.length + 7) >> 3);
+  for (let i = 0; i < data.length; i += 1) {
+    if (data[i]) bits[i >> 3] |= 1 << (i & 7);
+  }
+
+  const entry = { size, bits };
   state.qrCache.set(index, entry);
   trimQrCache(index);
   return entry;
@@ -528,7 +542,7 @@ function getCameraStream(constraints) {
 
   const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(location.hostname);
   const reason = location.protocol !== "https:" && !isLocalhost
-    ? "手机浏览器通常不允许 HTTP 局域网页面打开摄像头。请改用 HTTPS，或在接收设备本机运行后用 127.0.0.1 打开。"
+    ? "手机浏览器通常不允许 HTTP 页面打开摄像头。请使用 HTTPS 部署地址。"
     : "这个浏览器没有提供摄像头 API，请换 Chrome、Edge 或 Safari 新版本。";
   return Promise.reject(new Error(reason));
 }

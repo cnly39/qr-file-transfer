@@ -1,73 +1,53 @@
-# Image File Transfer
+# QR File Transfer
 
-Image File Transfer is a local web tool for sending files through animated QR-image frames. One device displays the generated frames, and another device scans them with a camera or imports screenshots to reconstruct the original file.
+QR File Transfer is a pure front-end web app for sending files through animated QR frames. One device displays frames, and another device scans them with a camera or imports screenshots to reconstruct the original file.
 
-It is useful for restricted environments where normal network file transfer is unavailable, but it is not intended to be fast. A 20 MB file can take many minutes depending on camera quality, display brightness, frame interval, and error correction level.
+No backend server is required. The app can run from a static host such as GitHub Pages.
 
 ## Features
 
-- Browser-based sender and receiver UI
+- Pure static HTML/CSS/JavaScript
 - Dynamic QR frame playback
 - Camera scanning with missing-frame recovery
 - Screenshot import fallback
-- HTTP server for LAN access
-- Optional self-signed HTTPS server for mobile camera access
 - Adjustable chunk size, frame interval, and QR error correction level
 - Optional frame filter for replaying specific missing frames
+- Local vendor bundles, no CDN required at runtime
 
-## Requirements
+## Live Deployment
 
-- Node.js 18 or newer
-- A modern browser
-- Camera permission on the receiving device
+Enable GitHub Pages for the repository and serve the `public/` folder.
 
-## Install
-
-```powershell
-npm install
-```
-
-## Run With HTTP
-
-```powershell
-npm start
-```
-
-The server listens on all interfaces by default and prints local and LAN URLs such as:
+Recommended Pages setting:
 
 ```text
-http://127.0.0.1:4177
-http://192.168.1.23:4177
+Source: Deploy from a branch
+Branch: main
+Folder: /public
 ```
 
-Use the LAN URL from another device on the same network.
+Then open the generated GitHub Pages HTTPS URL on both devices.
 
-## Run With HTTPS
+Mobile camera access normally requires HTTPS, so GitHub Pages is a better fit than opening the file directly from disk.
 
-Mobile browsers usually require HTTPS before they allow camera access from a LAN page. Generate a local self-signed certificate first:
+## Local Use
+
+You can open `public/index.html` directly in a browser for the sender. For receiver camera scanning, use an HTTPS host or `localhost`.
+
+A quick local static server is optional:
 
 ```powershell
-npm run cert
-npm start
+npx http-server public
 ```
-
-The HTTPS server uses port `4443` by default and prints URLs such as:
-
-```text
-https://127.0.0.1:4443
-https://192.168.1.23:4443
-```
-
-Because the certificate is self-signed, the browser will warn that the page is not trusted. Continue only on your own private network. If the phone still refuses camera access, install `certs/localhost-cert.pem` as a trusted certificate on the receiving device or use a real domain certificate.
 
 ## Usage
 
-1. Open the app on the sending device and stay on the **Send** tab.
+1. Open the app on the sending device and stay on the **发送** tab.
 2. Choose a file.
-3. Open the same app URL on the receiving device and switch to the **Receive** tab.
+3. Open the same app URL on the receiving device and switch to **接收**.
 4. Start the camera and point it at the sender screen.
 5. Keep playback looping until all frames are received.
-6. Click **Download file** when the receiver reaches 100%.
+6. Click **下载文件** when the receiver reaches 100%.
 
 ## Tuning
 
@@ -77,28 +57,41 @@ The defaults favor reliability over speed:
 - Frame interval: `450 ms`
 - Error correction: `M`
 
-If scanning is stable, try a shorter frame interval such as `250-350 ms`. If frames are hard to scan, increase the interval or use stronger error correction. If the receiver reports missing frames, enter a list such as `5,12-20` in the sender frame filter and replay only those frames.
+If scanning is stable, try a shorter frame interval such as `250-350 ms`. If frames are hard to scan, increase the interval or use stronger error correction.
+
+If the receiver reports missing frames, enter a list such as:
+
+```text
+5,12-20
+```
+
+in the sender frame filter and replay only those frames.
+
+## Rebuilding Vendor Files
+
+The committed files in `public/vendor/` are enough for runtime use. To rebuild the QRCode browser bundle:
+
+```powershell
+npm install
+npm run build:vendor
+```
+
+`public/vendor/jsQR.js` is copied from `node_modules/jsqr/dist/jsQR.js`.
 
 ## Security Notes
 
-- Generated certificates and private keys are local artifacts and are ignored by git.
-- Do not commit `certs/localhost-key.pem`.
-- The app is intended for trusted LAN use, not public Internet exposure.
-- The file payload is visible to anyone who can record or scan the displayed frames.
-
-## Scripts
-
-```powershell
-npm run cert   # Generate a local self-signed HTTPS certificate
-npm start      # Start HTTP and HTTPS servers when a cert exists
-npm run build:exe # Optional: build a Windows executable into dist/
-```
+- The app is intended for trusted local or private use.
+- File payloads are encoded into visible QR frames.
+- Anyone who can see or record the sender screen may be able to reconstruct the file.
+- No file data is uploaded to a server by this app.
 
 ## Project Structure
 
 ```text
-public/                 Browser UI
-scripts/generate-cert.js Self-signed certificate generator
-server.js               HTTP/HTTPS server and QR generation API
-package.json            Scripts and dependencies
+public/
+  index.html        App UI
+  app.js            Sender/receiver logic
+  styles.css        Styling
+  vendor/           Browser QR libraries
+package.json        Development scripts
 ```

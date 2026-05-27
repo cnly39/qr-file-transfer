@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>图像文件传输</title>
-    <link rel="stylesheet" href="/styles.css">
+    <title>QR File Transfer</title>
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <main class="app">
       <section class="toolbar">
         <div>
-          <h1>图像文件传输</h1>
-          <p>发送端显示动态二维码，接收端用摄像头扫描并还原文件。</p>
+          <h1>QR File Transfer</h1>
+          <p>用动态二维码在两台设备之间传输文件。纯前端运行，不需要后端服务。</p>
         </div>
         <div class="mode-tabs" role="tablist" aria-label="模式">
           <button id="senderTab" class="active" type="button">发送</button>
@@ -28,7 +28,7 @@
 
           <label>
             分片字节
-            <input id="chunkSize" type="number" min="400" max="1900" step="100" value="1400">
+            <input id="chunkSize" type="number" min="300" max="1900" step="100" value="1400">
           </label>
 
           <label>
@@ -48,12 +48,12 @@
 
           <label class="check">
             <input id="loopFrames" type="checkbox" checked>
-            循环
+            循环补扫
           </label>
 
           <label class="frame-filter">
             指定帧
-            <input id="frameFilter" type="text" placeholder="例如 5,12-20；留空=全部" autocomplete="off">
+            <input id="frameFilter" type="text" placeholder="例如 5,12-20；留空为全部" autocomplete="off">
           </label>
         </div>
 
@@ -120,7 +120,8 @@
       </section>
     </main>
 
-    <script src="/vendor/jsQR.js"></script>
-    <script src="/app.js"></script>
+    <script src="vendor/qrcode.js"></script>
+    <script src="vendor/jsQR.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>

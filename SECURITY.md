@@ -1,29 +1,15 @@
 # Security Policy
 
-This project is designed for short-lived transfers on a trusted local network.
-
-## Do Not Commit Secrets
-
-The HTTPS certificate generator writes files into `certs/`:
-
-```text
-certs/localhost-cert.pem
-certs/localhost-key.pem
-```
-
-The private key must stay local. The entire `certs/` directory is ignored by git.
-
-## Network Exposure
-
-By default the server listens on `0.0.0.0` so phones and other devices on the same LAN can connect. Do not expose this server directly to the public Internet.
-
-To restrict the server to the current machine:
-
-```powershell
-$env:HOST="127.0.0.1"
-npm start
-```
+QR File Transfer is a static browser app. It does not upload file data to a backend server.
 
 ## Data Visibility
 
-Files are encoded into visible QR frames. Anyone who can see or record the sender screen may be able to reconstruct the file.
+Files are encoded into visible QR frames. Anyone who can see, record, photograph, or scan the sender screen may be able to reconstruct the transferred file.
+
+## Hosting
+
+Use HTTPS when receiving with a camera, especially on mobile browsers. GitHub Pages is suitable because it serves static files over HTTPS.
+
+## Scope
+
+This project is meant for trusted local, private, or offline-adjacent workflows. Do not use it as a secure transport for highly sensitive files unless you encrypt the file before transfer.
