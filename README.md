@@ -30,6 +30,21 @@ Then open the generated GitHub Pages HTTPS URL on both devices.
 
 Mobile camera access normally requires HTTPS, so GitHub Pages is a better fit than opening the file directly from disk.
 
+## Vercel Deployment
+
+This repository includes `vercel.json`, so Vercel should deploy `public/` as a static site.
+
+Recommended Vercel settings:
+
+```text
+Framework Preset: Other
+Build Command: npm run build
+Output Directory: public
+Install Command: npm install
+```
+
+The build command only runs a syntax check. Runtime files are already committed under `public/`.
+
 ## Local Use
 
 You can open `public/index.html` directly in a browser for the sender. For receiver camera scanning, use an HTTPS host or `localhost`.

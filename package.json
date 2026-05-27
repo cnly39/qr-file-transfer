@@ -4,6 +4,7 @@
   "private": true,
   "description": "Static browser app for transferring files through animated QR frames.",
   "scripts": {
+    "build": "npm run check",
     "build:vendor": "browserify node_modules/qrcode/lib/browser.js --standalone QRCode -o public/vendor/qrcode.js",
     "check": "node --check public/app.js"
   },
