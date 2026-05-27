@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>图像文件传输</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="toolbar">
+        <div>
+          <h1>图像文件传输</h1>
+          <p>发送端显示动态二维码，接收端用摄像头扫描并还原文件。</p>
+        </div>
+        <div class="mode-tabs" role="tablist" aria-label="模式">
+          <button id="senderTab" class="active" type="button">发送</button>
+          <button id="receiverTab" type="button">接收</button>
+        </div>
+      </section>
+
+      <section id="senderPanel" class="panel active" aria-labelledby="senderTab">
+        <div class="controls">
+          <label class="file-picker">
+            <input id="fileInput" type="file">
+            <span>选择文件</span>
+          </label>
+
+          <label>
+            分片字节
+            <input id="chunkSize" type="number" min="400" max="1900" step="100" value="1400">
+          </label>
+
+          <label>
+            帧间隔 ms
+            <input id="frameDelay" type="number" min="120" max="2500" step="50" value="450">
+          </label>
+
+          <label>
+            纠错
+            <select id="ecLevel">
+              <option value="L">L · 7%</option>
+              <option value="M" selected>M · 15%</option>
+              <option value="Q">Q · 25%</option>
+              <option value="H">H · 30%</option>
+            </select>
+          </label>
+
+          <label class="check">
+            <input id="loopFrames" type="checkbox" checked>
+            循环
+          </label>
+
+          <label class="frame-filter">
+            指定帧
+            <input id="frameFilter" type="text" placeholder="例如 5,12-20；留空=全部" autocomplete="off">
+          </label>
+        </div>
+
+        <div class="sender-grid">
+          <div class="qr-stage">
+            <div id="qrBox" class="qr-box empty">等待选择文件</div>
+            <div class="progress">
+              <div id="sendProgressBar"></div>
+            </div>
+          </div>
+
+          <div class="status-panel">
+            <dl>
+              <div><dt>文件</dt><dd id="sendFileName">-</dd></div>
+              <div><dt>大小</dt><dd id="sendFileSize">-</dd></div>
+              <div><dt>总帧</dt><dd id="sendTotal">-</dd></div>
+              <div><dt>当前</dt><dd id="sendCurrent">-</dd></div>
+              <div><dt>预计</dt><dd id="sendEta">-</dd></div>
+            </dl>
+            <div class="actions">
+              <button id="startSend" type="button" disabled>开始</button>
+              <button id="pauseSend" type="button" disabled>暂停</button>
+              <button id="prevFrame" type="button" disabled>上一帧</button>
+              <button id="nextFrame" type="button" disabled>下一帧</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="receiverPanel" class="panel" aria-labelledby="receiverTab">
+        <div class="controls">
+          <button id="startCamera" type="button">打开摄像头</button>
+          <button id="stopCamera" type="button" disabled>关闭摄像头</button>
+          <label class="file-picker secondary">
+            <input id="imageInput" type="file" accept="image/*" multiple>
+            <span>导入截图</span>
+          </label>
+        </div>
+
+        <div class="receiver-grid">
+          <div class="camera-stage">
+            <video id="video" playsinline muted></video>
+            <canvas id="scanCanvas" hidden></canvas>
+            <div id="cameraHint" class="camera-hint">摄像头画面会显示在这里</div>
+          </div>
+
+          <div class="status-panel">
+            <dl>
+              <div><dt>文件</dt><dd id="recvFileName">-</dd></div>
+              <div><dt>大小</dt><dd id="recvFileSize">-</dd></div>
+              <div><dt>进度</dt><dd id="recvCount">0 / 0</dd></div>
+              <div><dt>缺失</dt><dd id="recvMissing">-</dd></div>
+              <div><dt>状态</dt><dd id="recvStatus">等待扫描</dd></div>
+            </dl>
+            <div class="progress">
+              <div id="recvProgressBar"></div>
+            </div>
+            <div class="actions">
+              <button id="downloadFile" type="button" disabled>下载文件</button>
+              <button id="resetReceive" type="button">清空接收</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/vendor/jsQR.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

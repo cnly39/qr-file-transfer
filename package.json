@@ -1,0 +1,27 @@
+{
+  "name": "image-file-transfer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transfer files by showing and scanning QR image frames.",
+  "bin": "server.js",
+  "scripts": {
+    "cert": "node scripts/generate-cert.js",
+    "start": "node server.js",
+    "build:exe": "pkg . --targets node18-win-x64 --output dist/image-file-transfer.exe"
+  },
+  "dependencies": {
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "certs/**/*",
+      "node_modules/jsqr/dist/jsQR.js"
+    ]
+  }
+}
